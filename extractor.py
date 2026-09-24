@@ -1,7 +1,15 @@
 import requests
 import time
+import json
+from kafka import KafkaProducer
 
 url = "https://opensky-network.org/api/states/all?lamin=35.9468&lomin=-9.3928&lamax=43.7483&lomax=3.0394"
+bootstrap_servers = ['localhost:19092']
+
+producer = KafkaProducer(
+    bootstrap_servers=bootstrap_servers,
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
 
 while True:
 
@@ -13,8 +21,8 @@ while True:
             if airplane_list:
                 print(f"Aviones detectados en la peninsula: {len(airplane_list)}")
 
-                for airplane_details in airplane_list[:1]:
-                    airplane = {
+                for airplane_details in airplane_list:
+                    telemetry_data = {
                         'icao24':          airplane_details[0],
                         'callsign':        airplane_details[1],
                         'origin_country':  airplane_details[2],
@@ -33,7 +41,7 @@ while True:
                         'spi':             airplane_details[15],
                         'position_source': airplane_details[16]
                     }
-                    print(airplane)
+                    producer.send('flight_telemetry', value=telemetry_data)
             else:
                 print(f"La API no devolvio aviones en esta zona")
         else:
@@ -42,3 +50,4 @@ while True:
         print(f"Error de conexion: {e}")
     print("Esperamos 15 segundos...\n")
     time.sleep(15)
+    producer.flush()
