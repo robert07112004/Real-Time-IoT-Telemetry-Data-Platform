@@ -23,9 +23,10 @@ clean_query = """
         true_track, 
         baro_altitude,
         on_ground,
-        vertical_rate
+        vertical_rate,
+        last_contact
     FROM bronze_flight_telemetry
-    WHERE longitude IS NOT NULL AND latitude IS NOT NULL;
+    WHERE longitude IS NOT NULL AND latitude IS NOT NULL AND last_contact IS NOT NULL;
 """
 
 df_silver = spark.sql(clean_query)
