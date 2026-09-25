@@ -11,16 +11,17 @@ producer = KafkaProducer(
     value_serializer=lambda v: json.dumps(v).encode('utf-8')
 )
 
-while True:
+print("Iniciando extracción de telemetría... (Pulsa Ctrl+C para detener)")
 
-    try:
+try:
+    while True:
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
             airplane_list = data.get('states', [])
+            
             if airplane_list:
                 print(f"Aviones detectados en la peninsula: {len(airplane_list)}")
-
                 for airplane_details in airplane_list:
                     telemetry_data = {
                         'icao24':          airplane_details[0],
@@ -43,11 +44,18 @@ while True:
                     }
                     producer.send('flight_telemetry', value=telemetry_data)
             else:
-                print(f"La API no devolvio aviones en esta zona")
+                print(f"La API no devolvió aviones en esta zona")
         else:
             print(f"Error al conectar con la API. Código de estado: {response.status_code}")
-    except Exception as e:
-        print(f"Error de conexion: {e}")
-    print("Esperamos 15 segundos...\n")
-    time.sleep(15)
-    producer.flush()
+            
+        print("Esperamos 15 segundos...\n")
+        time.sleep(15)
+        
+except KeyboardInterrupt:
+    print("\nSeñal de apagado recibida. Deteniendo el extractor...")
+finally:
+    if 'producer' in locals():
+        print("Enviando mensajes residuales del búfer y cerrando conexión...")
+        producer.flush()  
+        producer.close()
+        print("Extractor apagado de forma segura.")
