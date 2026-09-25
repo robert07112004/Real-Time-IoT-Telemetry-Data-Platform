@@ -48,8 +48,8 @@ try:
         else:
             print(f"Error al conectar con la API. Código de estado: {response.status_code}")
             
-        print("Esperamos 15 segundos...\n")
-        time.sleep(15)
+        print("Esperamos 5 minutos...\n")
+        time.sleep(300)
         
 except KeyboardInterrupt:
     print("\nSeñal de apagado recibida. Deteniendo el extractor...")
